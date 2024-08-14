@@ -61,7 +61,7 @@ def transform_url(url: str) -> str:
 
 async def scrape_nfce(update: Update, context):
     """Scrape NFCe data from the provided URL."""
-    url = update.message.text
+    original_url = update.message.text
 
     # Transform URL if necessary
     url = transform_url(url)
@@ -77,7 +77,7 @@ async def scrape_nfce(update: Update, context):
         data = scraper.get(url)
 
         # Save data to database
-        db.save_invoice(update.effective_user.id, data)
+        db.save_invoice(update.effective_user.id, data, original_url)
 
         # Send a summary of the scraped data
         summary = (

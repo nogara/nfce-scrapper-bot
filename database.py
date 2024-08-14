@@ -28,16 +28,21 @@ class Database:
         )
         self.conn.commit()
 
-    def save_invoice(self, user_id, data):
+    def save_invoice(self, user_id, data, original_url):
         cursor = self.conn.cursor()
 
         # Log the parsed JSON
         log_dir = "logs/json"
         os.makedirs(log_dir, exist_ok=True)
         log_file = f"{log_dir}/invoice_{data['informacoes']['chave_acesso']}.json"
+        data["original_url"] = original_url  # Add original URL to the data
         with open(log_file, "w") as f:
             json.dump(data, f, indent=2, default=str)
 
+        self._save_invoice_data(cursor, user_id, data)
+        self.conn.commit()
+
+    def _save_invoice_data(self, cursor, user_id, data):
         # Insert or update empresa
         cursor.execute(
             """
@@ -133,6 +138,12 @@ class Database:
                 ),
             )
 
+    def import_json(self, json_file_path, user_id):
+        with open(json_file_path, "r") as f:
+            data = json.load(f)
+
+        cursor = self.conn.cursor()
+        self._save_invoice_data(cursor, user_id, data)
         self.conn.commit()
 
     def close(self):
