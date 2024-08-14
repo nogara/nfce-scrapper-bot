@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  nfce-scraper-bot:
+    build: .
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    environment:
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - WEBDRIVER_PATH=/usr/local/bin/geckodriver
+      - DATABASE_PATH=/app/data/nfce.db
+    restart: unless-stopped
