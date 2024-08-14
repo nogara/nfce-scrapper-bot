@@ -186,8 +186,6 @@ class TotalsParser(ContentParser):
         totals = self.__get_totals(content, payment_type)
         values = self.__get_values(totals)
 
-        print(totals)
-        print(values)
         return {
             "quantidade_itens": int(values.get("Qtd. total de itens:", 0)),
             "valor_a_pagar": values.get("Valor a pagar", 0.0),
