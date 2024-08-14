@@ -1,5 +1,6 @@
 import os
 import logging
+from urllib.parse import urlparse, urlunparse
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
@@ -19,6 +20,15 @@ logger = logging.getLogger(__name__)
 # Initialize database
 db = Database()
 
+# List of valid URL prefixes
+VALID_URL_PREFIXES = [
+    "http://www4.fazenda.rj.gov.br/consultaNFCe/QRCode",
+    "https://consultadfe.fazenda.rj.gov.br/consultaNFCe/QRCode",
+]
+
+# URL to transform from and to
+URL_TRANSFORM_FROM = "https://consultadfe.fazenda.rj.gov.br/consultaNFCe/QRCode"
+URL_TRANSFORM_TO = "http://www4.fazenda.rj.gov.br/consultaNFCe/QRCode"
 
 async def start(update: Update, context):
     """Send a message when the command /start is issued."""
@@ -34,10 +44,29 @@ async def help_command(update: Update, context):
     await update.message.reply_text("Send me a NFCe URL to scrape.")
 
 
+def is_valid_url(url: str) -> bool:
+    """Check if the URL starts with any of the valid prefixes."""
+    return any(url.startswith(prefix) for prefix in VALID_URL_PREFIXES)
+
+
+def transform_url(url: str) -> str:
+    """Transform the URL if it matches the specific pattern."""
+    if url.startswith(URL_TRANSFORM_FROM):
+        parsed_url = urlparse(url)
+        new_parsed_url = parsed_url._replace(
+            scheme="http", netloc="www4.fazenda.rj.gov.br"
+        )
+        return urlunparse(new_parsed_url)
+    return url
+
 async def scrape_nfce(update: Update, context):
     """Scrape NFCe data from the provided URL."""
     url = update.message.text
-    if not url.startswith("http://www4.fazenda.rj.gov.br/consultaNFCe/QRCode"):
+
+    # Transform URL if necessary
+    url = transform_url(url)
+
+    if not is_valid_url(url):
         await update.message.reply_text("Please send a valid NFCe URL.")
         return
 
